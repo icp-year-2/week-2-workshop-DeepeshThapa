@@ -56,6 +56,11 @@ public class TopicDaoImpl implements TopicDao {
         //   By calling findTopicByName() first, you reject duplicates
         //   with a friendly message instead of a database error.
         // ============================================================
+        if (findTopicByName(topic.getName()) != null) {
+            System.out.println("Topic already exists: " + topic.getName());
+            return false;
+        }
+
 
         Connection conn = null;
         try {
@@ -155,6 +160,33 @@ public class TopicDaoImpl implements TopicDao {
     @Override
     public Topic findTopicByName(String name) {
         // Write your code here
-        return null;
+            Connection conn = null;
+
+            try {
+                conn = DatabaseConnection.getConnection();
+
+                String sql = "SELECT * FROM topics WHERE LOWER(name) = LOWER(?)";
+                PreparedStatement statement = conn.prepareStatement(sql);
+
+                statement.setString(1, name);
+
+                ResultSet rs = statement.executeQuery();
+
+                if (rs.next()) {
+                    return new Topic(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getTimestamp("created_at"),
+                            rs.getTimestamp("updated_at")
+                    );
+                }
+
+            } catch (SQLException e) {
+                System.out.println("Error finding topic: " + e.getMessage());
+            } finally {
+                DatabaseConnection.closeConnection(conn);
+            }
+
+            return null;
+        }
     }
-}
